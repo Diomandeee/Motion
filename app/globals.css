@@ -1,0 +1,174 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    border-color: theme('colors.gray.200');
+  }
+  
+  body {
+    background-color: theme('colors.gray.50');
+    color: theme('colors.gray.900');
+    /* Better touch scrolling on iOS */
+    -webkit-overflow-scrolling: touch;
+    /* Prevent text size adjustment on mobile */
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  /* Mobile optimizations */
+  html {
+    /* Prevent zoom on inputs */
+    font-size: 16px;
+  }
+
+  /* Improve touch targets on mobile */
+  button, 
+  [role="button"],
+  input,
+  select,
+  textarea {
+    touch-action: manipulation;
+    min-height: 44px; /* iOS recommended minimum touch target */
+    @apply sm:min-h-0; /* Reset on desktop */
+  }
+
+  /* Better focus styles for keyboard navigation */
+  :focus-visible {
+    @apply ring-2 ring-blue-500 ring-offset-2 outline-none;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-gray-100;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-gray-300 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-gray-400;
+}
+
+/* Mobile-specific scrollbar */
+@media (max-width: 768px) {
+  ::-webkit-scrollbar {
+    width: 3px;
+  }
+}
+
+/* Animation classes */
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+.animate-slide-in {
+  animation: slideIn 0.3s ease-out;
+}
+
+/* Mobile drawer animation */
+.animate-slide-in-left {
+  animation: slideInLeft 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(-10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+/* Chart container styles */
+.recharts-responsive-container {
+  @apply animate-fade-in;
+}
+
+/* Status indicator styles */
+.status-active {
+  @apply bg-green-100 text-green-800 border-green-200;
+}
+
+.status-inactive {
+  @apply bg-gray-100 text-gray-600 border-gray-200;
+}
+
+.status-error {
+  @apply bg-red-100 text-red-800 border-red-200;
+}
+
+/* Mobile-specific improvements */
+@media (max-width: 768px) {
+  /* Reduce padding on mobile */
+  .mobile-padding {
+    @apply px-4 py-3;
+  }
+
+  /* Better mobile chart legends */
+  .recharts-default-legend {
+    font-size: 12px !important;
+    line-height: 1.2 !important;
+  }
+
+  /* Improve mobile touch areas */
+  .mobile-touch {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Mobile-friendly grid spacing */
+  .mobile-grid {
+    gap: 1rem;
+  }
+}
+
+/* Safe area handling for iPhone X+ */
+@supports (padding-top: env(safe-area-inset-top)) {
+  .safe-area-top {
+    padding-top: env(safe-area-inset-top);
+  }
+  
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* Prevent horizontal scroll on mobile */
+body {
+  overflow-x: hidden;
+}
+
+/* Improve chart performance on mobile */
+.recharts-surface {
+  @apply will-change-transform;
+} 

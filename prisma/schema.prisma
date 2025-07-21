@@ -1,0 +1,68 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model SensorSession {
+  id                String   @id @default(cuid())
+  deviceId          String
+  sessionId         String   @unique
+  startTime         DateTime
+  endTime           DateTime?
+  isActive          Boolean  @default(true)
+  dataPath          String?  // Path to JSON data file
+  sensorTypes       String   // JSON array of active sensor types
+  totalDataPoints   Int      @default(0)
+  summary           String?  // JSON summary statistics
+  
+  // Metadata
+  deviceType        String?  // iOS, Android, etc.
+  appVersion        String?
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  // Relations
+  annotations       Annotation[]
+  
+  @@index([deviceId])
+  @@index([sessionId])
+  @@index([startTime])
+}
+
+model Annotation {
+  id          String   @id @default(cuid())
+  sessionId   String
+  timestamp   DateTime
+  text        String
+  category    String?  // "movement", "activity", "note", etc.
+  
+  session     SensorSession @relation(fields: [sessionId], references: [sessionId])
+  
+  createdAt   DateTime @default(now())
+  
+  @@index([sessionId])
+  @@index([timestamp])
+}
+
+model DeviceInfo {
+  id          String   @id @default(cuid())
+  deviceId    String   @unique
+  deviceName  String?
+  platform    String?  // iOS, Android, Web
+  model       String?
+  osVersion   String?
+  
+  lastSeen    DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([deviceId])
+} 
