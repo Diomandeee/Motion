@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { promises as fs } from 'fs';
-import path from 'path';
 import { SensorMessage, ProcessedSensorData } from '@/types/sensor';
 
-// In-memory storage for real-time data (you could also use Redis)
+// In-memory storage for real-time data (serverless compatible)
 let realtimeDataBuffer: ProcessedSensorData[] = [];
 const MAX_BUFFER_SIZE = 1000;
 
@@ -18,21 +16,6 @@ export async function POST(request: NextRequest) {
     // Parse the JSON data
     const sensorMessage: SensorMessage = JSON.parse(rawData);
     const { messageId, sessionId, deviceId, payload } = sensorMessage;
-    
-    // Save raw data to file (same as Python version)
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-    const dataDir = path.join(process.cwd(), 'data');
-    
-    // Ensure data directory exists
-    try {
-      await fs.access(dataDir);
-    } catch {
-      await fs.mkdir(dataDir, { recursive: true });
-    }
-    
-    // Save raw data
-    const filename = path.join(dataDir, `data_${timestamp}.json`);
-    await fs.writeFile(filename, rawData);
     
     // Process sensor data for real-time display
     const processedData = processSensorData(sensorMessage);
@@ -52,9 +35,12 @@ export async function POST(request: NextRequest) {
       timestamp: Date.now()
     });
     
+    console.log(`✅ Processed ${processedData.length} data points for real-time display`);
+    
     return NextResponse.json({ 
       success: true, 
       processed: processedData.length,
+      bufferSize: realtimeDataBuffer.length,
       timestamp: Date.now()
     });
     
@@ -64,6 +50,7 @@ export async function POST(request: NextRequest) {
       { 
         success: false, 
         error: 'Failed to process sensor data',
+        details: error instanceof Error ? error.message : 'Unknown error',
         timestamp: Date.now()
       }, 
       { status: 500 }
