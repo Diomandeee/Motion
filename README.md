@@ -1,16 +1,26 @@
-# 📊 Real-time Sensor Dashboard
+# 📊 Mobile-Friendly Sensor Dashboard
 
-A modern, intuitive Next.js application for monitoring and visualizing sensor data in real-time. Built specifically for comprehensive sensor logging with support for accelerometer, gyroscope, magnetometer, orientation, wrist motion, and audio sensors.
+A modern, responsive Next.js application for monitoring and visualizing sensor data in real-time. Built for comprehensive sensor logging with support for accelerometer, gyroscope, magnetometer, orientation, wrist motion, and audio sensors.
+
+## 🌐 **LIVE DEPLOYMENT**
+**Dashboard URL**: https://motion-two-virid.vercel.app/
+**API Endpoint**: https://motion-two-virid.vercel.app/api/data
 
 ## ✨ Features
 
+### 📱 **Mobile-First Design**
+- **Responsive layout** optimized for mobile devices
+- **Touch-friendly** navigation with collapsible sidebar
+- **PWA support** - installable as a mobile app
+- **Mobile-optimized charts** with responsive sizing
+
 ### 🎯 **Intuitive Dashboard Design**
 - **Real-time visualization** of all sensor types
-- **Responsive layout** that works on all devices
 - **Color-coded sensors** for easy identification
 - **Live status indicators** showing connection and data flow
+- **Debug mode** for troubleshooting
 
-### 📱 **Comprehensive Sensor Support**
+### 📊 **Comprehensive Sensor Support**
 - **Device Motion**: Accelerometer, Gyroscope, Gravity
 - **Wrist Motion**: Apple Watch/WearOS sensors 
 - **Orientation**: Euler angles and Quaternions
@@ -18,52 +28,42 @@ A modern, intuitive Next.js application for monitoring and visualizing sensor da
 - **Raw Data**: Uncalibrated sensor variants
 
 ### ⚡ **Real-time Performance**
-- **100ms update rate** matching your Sensor Logger
+- **100ms update rate** for smooth real-time updates
 - **Efficient data processing** and visualization
 - **Live charts** with smooth animations
 - **Automatic data buffering** (configurable limits)
 
-### 🔧 **Developer Friendly**
-- **TypeScript** for full type safety
-- **Prisma** for database management
-- **Tailwind CSS** for responsive styling
-- **Modern React** with hooks and components
-
 ## 🚀 Quick Start
 
-### 1. **Install Dependencies**
+### **📱 For Sensor Logger Apps**
+Update your sensor logger configuration to send data to:
+```
+https://motion-two-virid.vercel.app/api/data
+```
+
+### **🖥️ For Local Development**
 ```bash
+# Clone the repository
+git clone https://github.com/Diomandeee/Motion.git
+cd Motion
+
+# Install dependencies
 npm install
-# or
-yarn install
-```
 
-### 2. **Set Up Database**
-```bash
-# Generate Prisma client
-npx prisma generate
-
-# Push schema to database
-npx prisma db push
-```
-
-### 3. **Start Development Server**
-```bash
+# Start development server
 npm run dev
-# or
-yarn dev
 ```
 
-Your dashboard will be available at `http://localhost:3000`
+Your local dashboard will be available at `http://localhost:3000`
 
-### 4. **Update Sensor Logger**
+### **📋 For Mobile App Configuration**
 Change your Sensor Logger URL from:
 ```
-http://192.168.1.35:8000/data
+http://localhost:3000/api/data
 ```
 To:
 ```
-http://192.168.1.35:3000/api/data
+https://motion-two-virid.vercel.app/api/data
 ```
 
 ## 📊 Dashboard Overview
@@ -72,7 +72,12 @@ http://192.168.1.35:3000/api/data
 - **Connection Status**: Live/Disconnected indicator
 - **Data Statistics**: Total data points received
 - **Last Update**: Real-time timestamp
-- **Session Info**: Current monitoring session
+- **Mobile Controls**: Collapsible status panel
+
+### **Mobile Navigation**
+- **Sidebar on Desktop**: Fixed navigation panel
+- **Drawer on Mobile**: Slide-out hamburger menu
+- **Touch-Optimized**: Proper touch targets (44px minimum)
 
 ### **Sensor Status Panel**
 - **Visual indicators** for each sensor type
@@ -103,6 +108,9 @@ http://192.168.1.35:3000/api/data
 
 ## 🔧 Configuration
 
+### **Production Deployment**
+The app is deployed on Vercel and automatically updates from the main branch.
+
 ### **Data Retention**
 ```typescript
 // In app/api/data/route.ts
@@ -132,116 +140,80 @@ sensor: {
 sensor-dashboard/
 ├── app/                    # Next.js 14 App Router
 │   ├── api/data/          # Sensor data ingestion
-│   ├── globals.css        # Global styles
-│   ├── layout.tsx         # Root layout
+│   ├── globals.css        # Global styles + mobile optimizations
+│   ├── layout.tsx         # Root layout with PWA support
 │   └── page.tsx          # Main dashboard
 ├── components/            # React components
-│   ├── SensorChart.tsx    # Chart visualization
+│   ├── SensorChart.tsx    # Mobile-responsive chart visualization
 │   ├── SensorStatusPanel.tsx
-│   └── DashboardHeader.tsx
+│   ├── DashboardHeader.tsx # Mobile-optimized header
+│   └── TabNavigation.tsx  # Mobile drawer navigation
 ├── types/                 # TypeScript definitions
 │   └── sensor.ts         # Sensor data types
-├── prisma/               # Database schema
-│   └── schema.prisma     # Prisma schema
-└── data/                 # Sensor data files
+├── public/               # Static assets
+│   └── manifest.json     # PWA manifest
+└── data/                 # Sensor data files (local only)
 ```
 
-## 🔗 API Endpoints
+## 🌐 API Endpoints
 
 ### **POST /api/data**
-Receives sensor data from Sensor Logger
-- **Input**: Raw JSON sensor data
-- **Output**: Processing confirmation
-- **Auto-saves**: Raw data to `/data` directory
+Receive sensor data from logging applications
+```bash
+curl -X POST https://motion-two-virid.vercel.app/api/data \
+  -H "Content-Type: application/json" \
+  -d '{"messageId": 1, "sessionId": "test", "deviceId": "device1", "payload": [...]}'
+```
 
 ### **GET /api/data**
-Retrieves recent sensor data
-- **Query**: `?limit=100` (optional)
-- **Output**: Processed sensor data array
-
-## 📈 Data Flow
-
-```
-Sensor Logger → Next.js API → Processing → Database + Files → Real-time Dashboard
+Retrieve recent sensor data for dashboard display
+```bash
+curl https://motion-two-virid.vercel.app/api/data?limit=10
 ```
 
-1. **Sensor Logger** sends JSON data every 100ms
-2. **API Route** processes and saves data
-3. **Dashboard** polls for updates and displays charts
-4. **Real-time updates** maintain live visualization
+## 📱 Mobile Features
 
-## 🎨 Customization
+### **Progressive Web App (PWA)**
+- Install dashboard as a mobile app
+- Offline capability (coming soon)
+- Native app-like experience
 
-### **Add New Sensor Types**
-1. Update `types/sensor.ts` with new interfaces
-2. Add processing logic in `app/api/data/route.ts`
-3. Create chart configuration in dashboard
-4. Add status tracking and colors
+### **Touch Optimizations**
+- Minimum 44px touch targets
+- Smooth scrolling and animations
+- Mobile-optimized chart interactions
 
-### **Modify Chart Appearance**
-- Colors defined in `tailwind.config.js`
-- Chart configuration in `SensorChart.tsx`
-- Layout adjustments in `app/page.tsx`
+### **Responsive Design**
+- Single-column layout on mobile
+- Collapsible navigation drawer
+- Responsive text and spacing
 
 ## 🚀 Deployment
 
-### **Vercel (Recommended)**
+The app is automatically deployed to Vercel from the main branch:
+- **Production**: https://motion-two-virid.vercel.app/
+- **Repository**: https://github.com/Diomandeee/Motion
+
+### **Local Development**
 ```bash
-npm run build
-npx vercel --prod
+npm run dev     # Development server
+npm run build   # Production build
+npm run start   # Production server
 ```
-
-### **Docker**
-```dockerfile
-FROM node:18-alpine
-WORKDIR /app
-COPY package*.json ./
-RUN npm install
-COPY . .
-RUN npm run build
-EXPOSE 3000
-CMD ["npm", "start"]
-```
-
-### **Self-hosted**
-```bash
-npm run build
-npm start
-```
-
-## 📊 Performance
-
-- **Real-time updates**: 10Hz (100ms intervals)
-- **Data buffering**: 1000 points in memory
-- **Chart rendering**: Optimized with Recharts
-- **Memory usage**: ~50MB typical
-- **CPU usage**: <5% on modern hardware
 
 ## 🔧 Troubleshooting
 
-### **Connection Issues**
-- Verify Sensor Logger URL is updated
-- Check firewall settings on port 3000
-- Ensure devices are on same network
+### **Common Issues**
+- **No data showing**: Verify sensor logger is sending to correct URL
+- **Connection refused**: Check if API endpoint is accessible
+- **Mobile layout issues**: Clear cache and reload
 
-### **Performance Issues**
-- Reduce `MAX_BUFFER_SIZE` for lower memory usage
-- Increase `POLLING_INTERVAL` for less frequent updates
-- Disable animations in charts if needed
-
-### **Data Issues**
-- Check `/data` directory for raw files
-- Verify sensor types in console logs
-- Use Prisma Studio to inspect database
-
-## 📝 License
-
-MIT License - feel free to use for personal or commercial projects.
-
-## 🤝 Contributing
-
-This is a personal dashboard, but suggestions and improvements are welcome!
+### **Debug Mode**
+Enable debug mode in development to see:
+- Detailed sensor validation logs
+- Data structure analysis
+- Connection status information
 
 ---
 
-**Ready to monitor your sensors in style!** 🎯 # Motion
+**Built with ❤️ using Next.js 14, TypeScript, Tailwind CSS, and Recharts**
