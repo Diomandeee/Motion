@@ -64,6 +64,7 @@ coverage.xml
 !package.json
 !package-lock.json
 !manifest.json
+!tsconfig.json
 
 # IDE
 .vscode/
