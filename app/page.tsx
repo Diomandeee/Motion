@@ -16,7 +16,19 @@ import EnvironmentalTab from '@/components/tabs/EnvironmentalTab';
 import RawDataTab from '@/components/tabs/RawDataTab';
 import DiagnosticTab from '@/components/tabs/DiagnosticTab';
 
-const POLLING_INTERVAL = 100; // 100ms to match your current setup
+// Episode 1: Two-Device Fusion
+import Episode1Panel from '@/components/Episode1Panel';
+
+const POLLING_INTERVAL = 100;
+
+interface DatabaseStats {
+  devices: number;
+  sessions: number;
+  rawReadings: number;
+  processedData: number;
+  lastUpdated: string;
+  source: 'database' | 'memory';
+}
 
 export default function Dashboard() {
   const [dashboardState, setDashboardState] = useState<DashboardState>({
@@ -30,6 +42,28 @@ export default function Dashboard() {
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
   const [activeTab, setActiveTab] = useState('diagnostics');
   const [debugMode, setDebugMode] = useState(false);
+  const [dbStats, setDbStats] = useState<DatabaseStats | null>(null);
+
+  // Fetch database statistics
+  const fetchDbStats = async () => {
+    try {
+      const response = await fetch('/api/test-db');
+      const result = await response.json();
+      
+      if (result.success) {
+        setDbStats({
+          devices: result.counts.devices,
+          sessions: result.counts.sessions,
+          rawReadings: result.counts.rawReadings,
+          processedData: result.counts.processedData,
+          lastUpdated: result.timestamp,
+          source: 'database',
+        });
+      }
+    } catch (error) {
+      console.warn('Could not fetch database stats:', error);
+    }
+  };
 
   // Fetch initial data and set up polling
   useEffect(() => {
@@ -54,6 +88,15 @@ export default function Dashboard() {
           // Update sensor statuses based on received data
           updateSensorStatuses(processedData);
           setLastUpdate(new Date());
+          
+          // Update database stats if data source is database
+          if (result.source === 'database') {
+            setDbStats(prev => prev ? {
+              ...prev,
+              source: 'database',
+              lastUpdated: result.timestamp,
+            } : null);
+          }
         }
       } catch (error) {
         console.error('Failed to fetch sensor data:', error);
@@ -63,11 +106,16 @@ export default function Dashboard() {
 
     // Initial fetch
     fetchData();
+    fetchDbStats();
 
     // Set up polling
     const interval = setInterval(fetchData, POLLING_INTERVAL);
+    const dbStatsInterval = setInterval(fetchDbStats, 5000); // Update DB stats every 5 seconds
 
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      clearInterval(dbStatsInterval);
+    };
   }, []);
 
   const updateSensorStatuses = (data: ProcessedSensorData[]) => {
@@ -161,71 +209,120 @@ export default function Dashboard() {
 
   const { realtimeData, sensorStatuses, isConnected } = dashboardState;
 
-  const renderTabContent = () => {
+  const renderContent = () => {
     switch (activeTab) {
       case 'overview':
         return <OverviewTab data={realtimeData} sensorStatuses={sensorStatuses} />;
-      case 'watch-sensors':
+      case 'watchSensors':
         return <WatchSensorsTab data={realtimeData} />;
-      case 'device-motion':
-        return <DeviceMotionTab data={realtimeData} debug={debugMode} />;
-      case 'wrist-motion':
+      case 'deviceMotion':
+        return <DeviceMotionTab data={realtimeData} />;
+      case 'wristMotion':
         return <WristMotionTab data={realtimeData} />;
       case 'orientation':
         return <OrientationTab data={realtimeData} />;
       case 'environmental':
         return <EnvironmentalTab data={realtimeData} />;
-      case 'raw-data':
+      case 'rawData':
         return <RawDataTab data={realtimeData} />;
       case 'diagnostics':
         return <DiagnosticTab data={realtimeData} />;
       default:
-        return <OverviewTab data={realtimeData} sensorStatuses={sensorStatuses} />;
+        return <DiagnosticTab data={realtimeData} />;
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
       <DashboardHeader 
         isConnected={isConnected}
+        sensorStatuses={sensorStatuses}
+        totalDataPoints={realtimeData.length}
         lastUpdate={lastUpdate}
-        dataPoints={realtimeData.length}
       />
-      
+
+      {/* Database Status Panel */}
+      {dbStats && (
+        <div className="bg-white border-b border-gray-200 px-4 py-2">
+          <div className="max-w-7xl mx-auto">
+            <div className="flex flex-wrap items-center gap-4 text-sm">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                <span className="font-medium">Database: Connected</span>
+              </div>
+              <div className="text-gray-600">
+                📦 Devices: <span className="font-medium">{dbStats.devices}</span>
+              </div>
+              <div className="text-gray-600">
+                🔄 Sessions: <span className="font-medium">{dbStats.sessions}</span>
+              </div>
+              <div className="text-gray-600">
+                📊 Raw Data: <span className="font-medium">{dbStats.rawReadings.toLocaleString()}</span>
+              </div>
+              <div className="text-gray-600">
+                ⚡ Processed: <span className="font-medium">{dbStats.processedData.toLocaleString()}</span>
+              </div>
+              <div className="text-gray-500 text-xs ml-auto">
+                Storage: {dbStats.source === 'database' ? '🗄️ Persistent' : '💾 Memory'}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Debug Controls */}
-      {process.env.NODE_ENV === 'development' && (
-        <div className="bg-yellow-50 border-b border-yellow-200 px-4 sm:px-6 py-2">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
-            <span className="text-sm text-yellow-700 font-medium">Debug Controls</span>
-            <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
-              <label className="flex items-center space-x-2 text-sm text-yellow-700">
-                <input
-                  type="checkbox"
-                  checked={debugMode}
-                  onChange={(e) => setDebugMode(e.target.checked)}
-                  className="rounded"
-                />
-                <span>Enable Debug Mode</span>
-              </label>
+      {debugMode && (
+        <div className="bg-yellow-50 border-b border-yellow-200 px-4 py-3">
+          <div className="max-w-7xl mx-auto">
+            <div className="flex flex-wrap items-center gap-4 text-sm">
+              <span className="font-medium text-yellow-800">🔧 Debug Mode</span>
+              <span className="text-yellow-700">
+                Buffer Size: {realtimeData.length} | Active Sensors: {sensorStatuses.filter(s => s.isActive).length}
+              </span>
               <button
-                onClick={() => console.log('Current data:', realtimeData.slice(-5))}
-                className="text-xs bg-yellow-200 text-yellow-800 px-3 py-2 rounded-md hover:bg-yellow-300 transition-colors w-full sm:w-auto"
+                onClick={() => fetchDbStats()}
+                className="px-3 py-1 bg-yellow-200 text-yellow-800 rounded text-xs hover:bg-yellow-300"
               >
-                Log Recent Data
+                Refresh DB Stats
+              </button>
+              <button
+                onClick={() => setDebugMode(false)}
+                className="px-3 py-1 bg-yellow-200 text-yellow-800 rounded text-xs hover:bg-yellow-300"
+              >
+                Disable Debug
               </button>
             </div>
           </div>
         </div>
       )}
-      
-      <div className="flex-1">
-        <TabNavigation
+
+      <div className="flex">
+        {/* Navigation */}
+        <TabNavigation 
           tabs={SENSOR_TABS}
-          activeTab={activeTab}
+          activeTab={activeTab} 
           onTabChange={setActiveTab}
-        >
-          {renderTabContent()}
-        </TabNavigation>
+        />
+
+        {/* Main Content */}
+        <div className="flex-1 lg:ml-64">
+          <main className="p-6">
+            {/* Debug Toggle Button */}
+            {!debugMode && (
+              <div className="mb-4">
+                <button
+                  onClick={() => setDebugMode(true)}
+                  className="px-3 py-1 bg-gray-200 text-gray-700 rounded text-xs hover:bg-gray-300"
+                >
+                  Enable Debug Mode
+                </button>
+              </div>
+            )}
+            
+            {renderContent()}
+          </main>
+        </div>
       </div>
     </div>
   );
