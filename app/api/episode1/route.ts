@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+// Force dynamic route
+export const dynamic = 'force-dynamic';
+
 // Episode 1 feature packet type
 interface Episode1Features {
   t_host_ms: number;

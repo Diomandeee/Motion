@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { SensorMessage, ProcessedSensorData } from '@/types/sensor';
-import { prisma } from '@/lib/prisma';
+
+// Force dynamic route (prevent build-time execution)
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
 // In-memory storage for real-time data (serverless compatible)
 let realtimeDataBuffer: ProcessedSensorData[] = [];
@@ -11,6 +14,9 @@ let wsClients: Set<any> = new Set();
 
 export async function POST(request: NextRequest) {
   try {
+    // Dynamic import of Prisma (runtime only)
+    const { prisma } = await import('@/lib/prisma');
+    
     const rawData = await request.text();
     console.log('📡 RECEIVED RAW DATA:', rawData.substring(0, 500) + (rawData.length > 500 ? '...' : ''));
     
@@ -217,6 +223,9 @@ export async function POST(request: NextRequest) {
 // GET endpoint to retrieve recent data (now from database with fallback to memory)
 export async function GET(request: NextRequest) {
   try {
+    // Dynamic import of Prisma (runtime only)
+    const { prisma } = await import('@/lib/prisma');
+    
     const url = new URL(request.url);
     const limit = parseInt(url.searchParams.get('limit') || '100');
     const sessionId = url.searchParams.get('sessionId');
