@@ -1,5 +1,5 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
+// Optimized Prisma schema for comprehensive sensor data storage
+// Designed for high-frequency real-time sensor data capture
 
 generator client {
   provider = "prisma-client-js"
@@ -7,62 +7,192 @@ generator client {
 
 datasource db {
   provider = "sqlite"
-  url      = "file:./dev.db"
+  url      = env("DATABASE_URL")
 }
 
+// Device registration and metadata
+model Device {
+  id            String   @id @default(cuid())
+  deviceId      String   @unique
+  deviceName    String?
+  platform      String?  // iOS, Android, Web
+  model         String?
+  osVersion     String?
+  appVersion    String?
+  
+  // Relations
+  sessions      SensorSession[]
+  sensorData    SensorReading[]
+  
+  lastSeen      DateTime @default(now())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  @@index([deviceId])
+  @@index([lastSeen])
+}
+
+// Sensor data collection sessions
 model SensorSession {
   id                String   @id @default(cuid())
-  deviceId          String
   sessionId         String   @unique
+  deviceId          String
+  
   startTime         DateTime
   endTime           DateTime?
   isActive          Boolean  @default(true)
-  dataPath          String?  // Path to JSON data file
-  sensorTypes       String   // JSON array of active sensor types
-  totalDataPoints   Int      @default(0)
-  summary           String?  // JSON summary statistics
   
-  // Metadata
-  deviceType        String?  // iOS, Android, etc.
-  appVersion        String?
+  // Session metadata
+  sensorTypes       String   // Comma-separated sensor types
+  totalDataPoints   Int      @default(0)
+  dataFrequencyHz   Float?   // Average data frequency
+  
+  // Summary statistics (JSON as string)
+  summary           String?
+  
+  // Relations
+  device            Device @relation(fields: [deviceId], references: [deviceId], onDelete: Cascade)
+  sensorData        SensorReading[]
+  annotations       Annotation[]
   
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
   
-  // Relations
-  annotations       Annotation[]
-  
   @@index([deviceId])
   @@index([sessionId])
   @@index([startTime])
+  @@index([isActive])
 }
 
+// Individual sensor readings (high-frequency data)
+model SensorReading {
+  id              String   @id @default(cuid())
+  
+  // Core identifiers
+  deviceId        String
+  sessionId       String
+  messageId       Int
+  
+  // Sensor metadata
+  sensorName      String   // "accelerometer", "gyroscope", etc.
+  timestamp       DateTime // When the reading was taken
+  nanoseconds     BigInt   // Original nanosecond timestamp
+  accuracy        Float?   // Sensor accuracy if available
+  
+  // Sensor values (JSON as string for SQLite compatibility)
+  values          String   // Raw sensor values as JSON string
+  
+  // Relations
+  device          Device @relation(fields: [deviceId], references: [deviceId], onDelete: Cascade)
+  session         SensorSession @relation(fields: [sessionId], references: [sessionId], onDelete: Cascade)
+  
+  createdAt       DateTime @default(now())
+  
+  @@index([deviceId])
+  @@index([sessionId])
+  @@index([timestamp])
+  @@index([sensorName])
+  @@index([sensorName, timestamp])
+  @@index([sessionId, timestamp])
+}
+
+// Processed/aggregated sensor data for efficient dashboard queries
+model ProcessedSensorData {
+  id              String   @id @default(cuid())
+  
+  // Core identifiers
+  deviceId        String
+  sessionId       String
+  timestamp       DateTime
+  
+  // Device Motion Sensors
+  accelerometerX  Float?
+  accelerometerY  Float?
+  accelerometerZ  Float?
+  
+  gyroscopeX      Float?
+  gyroscopeY      Float?
+  gyroscopeZ      Float?
+  
+  gravityX        Float?
+  gravityY        Float?
+  gravityZ        Float?
+  
+  // Orientation
+  orientationYaw    Float?
+  orientationPitch  Float?
+  orientationRoll   Float?
+  quaternionX       Float?
+  quaternionY       Float?
+  quaternionZ       Float?
+  quaternionW       Float?
+  
+  // Magnetic & Environmental
+  magneticBearing   Float?
+  compassBearing    Float?
+  microphoneDbfs    Float?
+  
+  // Wrist Motion (Apple Watch/WearOS)
+  wristRotationX    Float?
+  wristRotationY    Float?
+  wristRotationZ    Float?
+  wristAccelX       Float?
+  wristAccelY       Float?
+  wristAccelZ       Float?
+  wristGravityX     Float?
+  wristGravityY     Float?
+  wristGravityZ     Float?
+  wristQuaternionX  Float?
+  wristQuaternionY  Float?
+  wristQuaternionZ  Float?
+  wristQuaternionW  Float?
+  
+  // Watch-specific sensors
+  heartRateBpm      Float?
+  heartRateConfidence Float?
+  locationLat       Float?
+  locationLng       Float?
+  locationAlt       Float?
+  locationAccuracy  Float?
+  locationSpeed     Float?
+  locationBearing   Float?
+  barometerPressure Float?
+  barometerAltitude Float?
+  
+  // Uncalibrated sensors
+  accelUncalX       Float?
+  accelUncalY       Float?
+  accelUncalZ       Float?
+  gyroUncalX        Float?
+  gyroUncalY        Float?
+  gyroUncalZ        Float?
+  magnetUncalX      Float?
+  magnetUncalY      Float?
+  magnetUncalZ      Float?
+  
+  createdAt         DateTime @default(now())
+  
+  @@index([deviceId])
+  @@index([sessionId])
+  @@index([timestamp])
+  @@index([deviceId, timestamp])
+  @@index([sessionId, timestamp])
+}
+
+// User annotations and notes
 model Annotation {
   id          String   @id @default(cuid())
   sessionId   String
   timestamp   DateTime
   text        String
   category    String?  // "movement", "activity", "note", etc.
+  tags        String?  // Comma-separated searchable tags
   
-  session     SensorSession @relation(fields: [sessionId], references: [sessionId])
+  session     SensorSession @relation(fields: [sessionId], references: [sessionId], onDelete: Cascade)
   
   createdAt   DateTime @default(now())
   
   @@index([sessionId])
   @@index([timestamp])
-}
-
-model DeviceInfo {
-  id          String   @id @default(cuid())
-  deviceId    String   @unique
-  deviceName  String?
-  platform    String?  // iOS, Android, Web
-  model       String?
-  osVersion   String?
-  
-  lastSeen    DateTime @default(now())
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
-  @@index([deviceId])
+  @@index([category])
 } 

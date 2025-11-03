@@ -14,7 +14,6 @@ interface TabNavigationProps {
   tabs: Tab[];
   activeTab: string;
   onTabChange: (tabId: string) => void;
-  children: React.ReactNode;
 }
 
 const TabButton = ({ 
@@ -57,8 +56,7 @@ const TabButton = ({
 export default function TabNavigation({ 
   tabs, 
   activeTab, 
-  onTabChange, 
-  children 
+  onTabChange 
 }: TabNavigationProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -167,10 +165,6 @@ export default function TabNavigation({
           </div>
         </div>
         
-        {/* Content Area */}
-        <div className="flex-1 overflow-auto">
-          {children}
-        </div>
       </div>
     </>
   );
@@ -185,19 +179,19 @@ export const SENSOR_TABS: Tab[] = [
     description: 'All sensors summary'
   },
   {
-    id: 'watch-sensors',
+    id: 'watchSensors',
     name: 'Watch Sensors',
     icon: Watch,
     description: 'Heart rate, Location, Barometer'
   },
   {
-    id: 'device-motion',
+    id: 'deviceMotion',
     name: 'Device Motion',
     icon: Smartphone,
     description: 'Accelerometer & Gyroscope'
   },
   {
-    id: 'wrist-motion',
+    id: 'wristMotion',
     name: 'Wrist Motion',
     icon: Watch,
     description: 'Apple Watch / WearOS'
@@ -215,7 +209,7 @@ export const SENSOR_TABS: Tab[] = [
     description: 'Magnetometer & Audio'
   },
   {
-    id: 'raw-data',
+    id: 'rawData',
     name: 'Raw Data',
     icon: Settings,
     description: 'Uncalibrated sensors'

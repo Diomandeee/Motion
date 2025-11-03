@@ -3,17 +3,20 @@
 import { useState, useEffect } from 'react';
 import { Wifi, WifiOff, Database, Clock, Activity, ChevronDown, ChevronUp } from 'lucide-react';
 import { format } from 'date-fns';
+import { SensorStatus } from '@/types/sensor';
 
 interface DashboardHeaderProps {
   isConnected: boolean;
   lastUpdate: Date;
-  dataPoints: number;
+  totalDataPoints: number;
+  sensorStatuses: SensorStatus[];
 }
 
 export default function DashboardHeader({ 
   isConnected, 
   lastUpdate, 
-  dataPoints 
+  totalDataPoints,
+  sensorStatuses 
 }: DashboardHeaderProps) {
   const [mounted, setMounted] = useState(false);
   const [showMobileDetails, setShowMobileDetails] = useState(false);
@@ -73,7 +76,7 @@ export default function DashboardHeader({
             <div className="flex items-center space-x-2 text-gray-600">
               <Database className="w-4 h-4" />
               <div className="text-sm">
-                <span className="font-medium">{dataPoints.toLocaleString()}</span>
+                <span className="font-medium">{totalDataPoints.toLocaleString()}</span>
                 <span className="text-gray-500 ml-1">points</span>
               </div>
             </div>
@@ -136,7 +139,7 @@ export default function DashboardHeader({
               <div className="flex items-center space-x-2 text-gray-600">
                 <Database className="w-4 h-4" />
                 <div>
-                  <span className="font-medium">{dataPoints.toLocaleString()}</span>
+                  <span className="font-medium">{totalDataPoints.toLocaleString()}</span>
                   <span className="text-gray-500 ml-1">points</span>
                 </div>
               </div>
