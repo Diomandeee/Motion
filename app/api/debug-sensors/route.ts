@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
     });
 
     // Group by sensor type to see what sensors are being received
-    const sensorTypes = [...new Set(recentReadings.map(r => r.sensorName))];
+    const sensorTypes = Array.from(new Set(recentReadings.map(r => r.sensorName)));
     const sensorCounts = sensorTypes.map(type => ({
       name: type,
       count: recentReadings.filter(r => r.sensorName === type).length,
